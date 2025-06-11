@@ -5,7 +5,11 @@ const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
-
+app.use((req, res, next) => {
+  res.removeHeader('X-Frame-Options');
+  res.setHeader('X-Frame-Options', 'ALLOWALL');
+  next();
+});
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'frontend')));
 
