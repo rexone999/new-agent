@@ -12,7 +12,7 @@
         "name": { "value": "PO Gemini Assistant" },
         "url": "/",
         "conditions": [],
-        "cacheable": true,
+        "cacheable": true
 
       }
     ]
