@@ -31,42 +31,62 @@ form.addEventListener('submit', async (e) => {
             const summary = parts[1];
             const description = parts[2];
             addMsg('bot', 'Creating Jira issue...');
-            const resp = await fetch('/api/jira/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ summary, description, issuetype: type })
-            });
-            const data = await resp.json();
-            if (data.key) {
-                addMsg('bot', `Created Jira issue: <a href="${data.url}" target="_blank">${data.key}</a>`);
-            } else {
-                addMsg('bot', 'Failed to create Jira issue.');
+            try {
+                const resp = await fetch('/api/jira/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ summary, description, issuetype: type })
+                });
+                const data = await resp.json();
+                if (data.key) {
+                    addMsg('bot', `Created Jira issue: <a href="${data.url}" target="_blank">${data.key}</a>`);
+                } else {
+                    addMsg('bot', 'Failed to create Jira issue: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                addMsg('bot', 'Error creating Jira issue: ' + error.message);
             }
+            return;
+        } else {
+            addMsg('bot', 'Usage: /create Type|Summary|Description');
             return;
         }
     }
+
     if (msg.startsWith('/get')) {
         // Parse command: /get ABC-123
         const parts = msg.split(' ');
         if (parts.length === 2) {
             addMsg('bot', 'Fetching Jira issue...');
-            const resp = await fetch('/api/jira/issue/' + parts[1]);
-            const data = await resp.json();
-            if (data.key) {
-                addMsg('bot', `Issue ${data.key}: ${data.fields.summary}<br>Status: ${data.fields.status.name}<br>Description: ${data.fields.description?.content?.[0]?.content?.[0]?.text || 'No description'}`);
-            } else {
-                addMsg('bot', 'Failed to fetch Jira issue.');
+            try {
+                const resp = await fetch('/api/jira/issue/' + parts[1]);
+                const data = await resp.json();
+                if (data.key) {
+                    const description = data.fields.description?.content?.[0]?.content?.[0]?.text || 'No description';
+                    addMsg('bot', `Issue ${data.key}: ${data.fields.summary}<br>Status: ${data.fields.status.name}<br>Description: ${description}`);
+                } else {
+                    addMsg('bot', 'Failed to fetch Jira issue: ' + (data.error || 'Issue not found'));
+                }
+            } catch (error) {
+                addMsg('bot', 'Error fetching Jira issue: ' + error.message);
             }
+            return;
+        } else {
+            addMsg('bot', 'Usage: /get ISSUE-KEY');
             return;
         }
     }
 
     // Otherwise, send to Gemini
-    const resp = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg })
-    });
-    const data = await resp.json();
-    addMsg('bot', data.reply);
+    try {
+        const resp = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: msg })
+        });
+        const data = await resp.json();
+        addMsg('bot', data.reply || data.error);
+    } catch (error) {
+        addMsg('bot', 'Error: ' + error.message);
+    }
 });
