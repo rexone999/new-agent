@@ -13,6 +13,17 @@ app.use((req, res, next) => {
   res.removeHeader('X-Frame-Options');
   // Set CSP to allow framing by Atlassian domains
   res.setHeader('Content-Security-Policy', "frame-ancestors 'self' https://*.atlassian.net https://*.jira.com");
+  // Add CORS headers for Atlassian
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+  
   next();
 });
 
@@ -41,14 +52,42 @@ app.post('/installed', (req, res) => {
     console.log('App installed:', req.body);
     // Store installation details (clientKey, sharedSecret, etc.)
     // In production, save this to a database
-    const { clientKey, sharedSecret, baseUrl } = req.body;
+    const { clientKey, sharedSecret, baseUrl, publicKey, serverVersion, pluginsVersion } = req.body;
     console.log(`Installed for: ${baseUrl} with clientKey: ${clientKey}`);
-    res.status(200).send('OK');
+    console.log(`Shared Secret: ${sharedSecret}`);
+    
+    // Acknowledge successful installation
+    res.status(200).json({
+        status: 'installed',
+        clientKey: clientKey
+    });
 });
 
 app.post('/uninstalled', (req, res) => {
     console.log('App uninstalled:', req.body);
-    res.status(200).send('OK');
+    const { clientKey } = req.body;
+    console.log(`Uninstalled clientKey: ${clientKey}`);
+    res.status(200).json({
+        status: 'uninstalled'
+    });
+});
+
+app.post('/enabled', (req, res) => {
+    console.log('App enabled:', req.body);
+    const { clientKey } = req.body;
+    console.log(`Enabled clientKey: ${clientKey}`);
+    res.status(200).json({
+        status: 'enabled'
+    });
+});
+
+app.post('/disabled', (req, res) => {
+    console.log('App disabled:', req.body);
+    const { clientKey } = req.body;
+    console.log(`Disabled clientKey: ${clientKey}`);
+    res.status(200).json({
+        status: 'disabled'
+    });
 });
 
 // ✅ Main assistant page (served within Jira iframe)
