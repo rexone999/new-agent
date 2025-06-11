@@ -5,8 +5,12 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
+
+// Parse JSON request bodies
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../frontend')));
+
+// Serve static frontend files from /frontend
+app.use(express.static(path.join(__dirname, 'frontend')));
 
 /**
  * POST /api/chat
@@ -15,12 +19,18 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 app.post('/api/chat', async (req, res) => {
     try {
         const userMsg = req.body.message;
-        // Gemini API call
+
+        // Call Gemini API with user's message
         const geminiResp = await axios.post(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-            { contents: [{ parts: [{ text: userMsg }] }] },
-            { headers: { 'Content-Type': 'application/json' } }
+            {
+                contents: [{ parts: [{ text: userMsg }] }]
+            },
+            {
+                headers: { 'Content-Type': 'application/json' }
+            }
         );
+
         const reply = geminiResp.data.candidates[0].content.parts[0].text;
         res.json({ reply });
     } catch (error) {
@@ -37,7 +47,6 @@ app.post('/api/jira/create', async (req, res) => {
     try {
         const { summary, description, issuetype } = req.body;
 
-        // Jira API call
         const response = await axios.post(
             `${process.env.JIRA_BASE_URL}/rest/api/3/issue`,
             {
@@ -56,7 +65,11 @@ app.post('/api/jira/create', async (req, res) => {
                 }
             }
         );
-        res.json({ key: response.data.key, url: `${process.env.JIRA_BASE_URL}/browse/${response.data.key}` });
+
+        res.json({
+            key: response.data.key,
+            url: `${process.env.JIRA_BASE_URL}/browse/${response.data.key}`
+        });
     } catch (error) {
         console.error('Jira Create Error:', error.response?.data || error.message);
         res.status(500).json({ error: 'Jira ticket creation failed' });
@@ -70,6 +83,7 @@ app.post('/api/jira/create', async (req, res) => {
 app.get('/api/jira/issue/:key', async (req, res) => {
     try {
         const key = req.params.key;
+
         const response = await axios.get(
             `${process.env.JIRA_BASE_URL}/rest/api/3/issue/${key}`,
             {
@@ -79,6 +93,7 @@ app.get('/api/jira/issue/:key', async (req, res) => {
                 }
             }
         );
+
         res.json(response.data);
     } catch (error) {
         console.error('Jira Fetch Error:', error.response?.data || error.message);
@@ -86,11 +101,11 @@ app.get('/api/jira/issue/:key', async (req, res) => {
     }
 });
 
-// Serve frontend (index.html) for all other routes
+// Serve frontend/index.html for all unmatched routes
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+    res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
 
-// Start server
+// Start the server
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
