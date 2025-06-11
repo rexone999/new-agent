@@ -25,9 +25,7 @@ app.get('/atlassian-connect.json', (req, res) => {
         res.send(data);
     });
 });
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
-});
+
 // 🔹 Gemini AI Chat Handler
 app.post('/api/chat', async (req, res) => {
     try {
@@ -106,7 +104,9 @@ app.get('/api/jira/issue/:key', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch Jira issue' });
     }
 });
-
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+});
 // Serve frontend for all other unmatched routes
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
