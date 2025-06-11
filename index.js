@@ -1,26 +1,32 @@
-// Express backend for Jira + Gemini chatbot assistant
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
 
-// Parse JSON request bodies
 app.use(express.json());
-
-// Serve static frontend files from /frontend
 app.use(express.static(path.join(__dirname, 'frontend')));
 
-/**
- * POST /api/chat
- * Calls Gemini API with user input, returns Gemini's reply.
- */
+// ✅ Serve atlassian-connect.json with proper headers
+app.get('/atlassian-connect.json', (req, res) => {
+    const manifestPath = path.join(__dirname, 'atlassian-connect.json');
+    fs.readFile(manifestPath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Manifest read error:', err);
+            return res.status(500).send('Manifest file not found.');
+        }
+        res.setHeader('Content-Type', 'application/json');
+        res.send(data);
+    });
+});
+
+// 🔹 Gemini AI Chat Handler
 app.post('/api/chat', async (req, res) => {
     try {
         const userMsg = req.body.message;
 
-        // Call Gemini API with user's message
         const geminiResp = await axios.post(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
             {
@@ -39,10 +45,7 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-/**
- * POST /api/jira/create
- * Creates a Jira issue (story, epic, task, etc).
- */
+// 🔹 Jira Ticket Creation
 app.post('/api/jira/create', async (req, res) => {
     try {
         const { summary, description, issuetype } = req.body;
@@ -76,10 +79,7 @@ app.post('/api/jira/create', async (req, res) => {
     }
 });
 
-/**
- * GET /api/jira/issue/:key
- * Fetches Jira issue details by issue key.
- */
+// 🔹 Jira Issue Fetching
 app.get('/api/jira/issue/:key', async (req, res) => {
     try {
         const key = req.params.key;
@@ -101,11 +101,11 @@ app.get('/api/jira/issue/:key', async (req, res) => {
     }
 });
 
-// Serve frontend/index.html for all unmatched routes
+// Serve frontend for all other unmatched routes
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
 
-// Start the server
+// Start server
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
