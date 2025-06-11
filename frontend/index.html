@@ -1,22 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Jira Gemini Chatbot Assistant</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jira Gemini Chatbot Assistant</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="ac-content">
     <h1>PO/BA Chatbot Assistant</h1>
     <div id="chatbox"></div>
     <form id="chat-form">
-      <input id="user-input" autocomplete="off" placeholder="Ask, create story, or get ticket info..." />
-      <button type="submit">Send</button>
+        <input id="user-input" autocomplete="off" placeholder="Ask, create story, or get ticket info...">
+        <button type="submit">Send</button>
     </form>
-  </div>
-
-  <!-- Crucial: Connect JavaScript API -->
-  <script src="https://connect-cdn.atl-paas.net/all.js"></script> <!-- 🔑 Required for cross-domain messaging :contentReference[oaicite:4]{index=4} -->
-  <script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
