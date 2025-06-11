@@ -1,0 +1,8 @@
+body { font-family: Arial, sans-serif; max-width: 600px; margin: 2rem auto; }
+h1 { text-align: center; }
+#chatbox { border: 1px solid #ccc; min-height: 300px; padding: 1em; margin-bottom: 1em; overflow-y: auto; background: #f9f9f9; }
+.user { color: blue; margin-bottom: .5em; }
+.bot { color: green; margin-bottom: 1em; }
+form { display: flex; }
+#user-input { flex: 1; padding: .5em; }
+button { padding: .5em 1em; }
