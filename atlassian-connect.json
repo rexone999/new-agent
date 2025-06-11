@@ -11,7 +11,9 @@
         "location": "system.top.navigation.bar",
         "name": { "value": "PO Gemini Assistant" },
         "url": "/",
-        "conditions": []
+        "conditions": [],
+        "cacheable": true,
+
       }
     ]
   }
