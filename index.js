@@ -2,16 +2,25 @@ const express = require('express');
 const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 require('dotenv').config();
 
 const app = express();
+
+// ✅ Middleware for Atlassian Connect
 app.use((req, res, next) => {
+  // Remove X-Frame-Options to allow iframe embedding in Jira
   res.removeHeader('X-Frame-Options');
-  res.setHeader('X-Frame-Options', 'ALLOWALL');
+  // Set CSP to allow framing by Atlassian domains
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'self' https://*.atlassian.net https://*.jira.com");
   next();
 });
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'frontend')));
+
+// Generate a shared secret for JWT authentication
+const SHARED_SECRET = process.env.ATLASSIAN_SHARED_SECRET || crypto.randomBytes(32).toString('hex');
 
 // ✅ Serve atlassian-connect.json with proper headers
 app.get('/atlassian-connect.json', (req, res) => {
@@ -22,12 +31,37 @@ app.get('/atlassian-connect.json', (req, res) => {
             return res.status(500).send('Manifest file not found.');
         }
         res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Access-Control-Allow-Origin', '*');
         res.send(data);
     });
 });
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+
+// ✅ Lifecycle endpoints for Atlassian Connect
+app.post('/installed', (req, res) => {
+    console.log('App installed:', req.body);
+    // Store installation details (clientKey, sharedSecret, etc.)
+    // In production, save this to a database
+    const { clientKey, sharedSecret, baseUrl } = req.body;
+    console.log(`Installed for: ${baseUrl} with clientKey: ${clientKey}`);
+    res.status(200).send('OK');
 });
+
+app.post('/uninstalled', (req, res) => {
+    console.log('App uninstalled:', req.body);
+    res.status(200).send('OK');
+});
+
+// ✅ Main assistant page (served within Jira iframe)
+app.get('/assistant', (req, res) => {
+    // This endpoint serves the main app within Jira
+    res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+});
+
+// Default route for testing outside Jira
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+});
+
 // 🔹 Gemini AI Chat Handler
 app.post('/api/chat', async (req, res) => {
     try {
@@ -62,7 +96,21 @@ app.post('/api/jira/create', async (req, res) => {
                 fields: {
                     project: { key: process.env.JIRA_PROJECT_KEY },
                     summary,
-                    description,
+                    description: {
+                        type: "doc",
+                        version: 1,
+                        content: [
+                            {
+                                type: "paragraph",
+                                content: [
+                                    {
+                                        type: "text",
+                                        text: description
+                                    }
+                                ]
+                            }
+                        ]
+                    },
                     issuetype: { name: issuetype }
                 }
             },
