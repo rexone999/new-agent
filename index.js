@@ -21,7 +21,9 @@ app.get('/atlassian-connect.json', (req, res) => {
         res.send(data);
     });
 });
-
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+});
 // 🔹 Gemini AI Chat Handler
 app.post('/api/chat', async (req, res) => {
     try {
