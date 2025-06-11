@@ -1,20 +1,36 @@
 {
   "key": "po-gemini-assist",
   "name": "PO Gemini Assist",
+  "description": "AI-powered assistant for Product Owners and Business Analysts",
+  "version": "1.0.0",
+  "vendor": {
+    "name": "Your Company Name",
+    "url": "https://new-agent-1-axe6.onrender.com"
+  },
   "baseUrl": "https://new-agent-1-axe6.onrender.com",
-  "authentication": { "type": "none" },
+  "links": {
+    "self": "https://new-agent-1-axe6.onrender.com/atlassian-connect.json"
+  },
+  "authentication": {
+    "type": "jwt"
+  },
+  "lifecycle": {
+    "installed": "/installed",
+    "uninstalled": "/uninstalled"
+  },
   "scopes": ["read", "write", "act_as_user"],
   "modules": {
     "generalPages": [
       {
         "key": "assist-page",
         "location": "system.top.navigation.bar",
-        "name": { "value": "PO Gemini Assistant" },
-        "url": "/",
-        "conditions": [],
-        "cacheable": true
-
+        "name": {
+          "value": "PO Gemini Assistant"
+        },
+        "url": "/assistant?user_key={user.key}&user_id={user.accountId}",
+        "conditions": []
       }
     ]
-  }
+  },
+  "apiVersion": 1
 }
